@@ -3,6 +3,7 @@
 torch>=1.11.0+cu113
 
 # --------- linters --------- #
+pylama[all]     # better checker overall
 pre-commit      # hooks for applying linters on commit
 black           # code formatting
 isort           # import sorting
