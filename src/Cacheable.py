@@ -3,8 +3,6 @@ import torch
 from typing import Any, Union
 from pathlib import Path
 
-import dill
-
 import logging
 logging.getLogger(__name__)
 
@@ -28,9 +26,9 @@ class Cacheable:
         """
 
         if cache_path is None:
-            raise RuntimeError("Cache path can't be None!")
+            raise ValueError("Cache path can't be None!")
         if item_name is None:
-            raise RuntimeError("Item name can't be None!")
+            raise ValueError("Item name can't be None!")
 
         if isinstance(cache_path, str):
             cache_path = Path(cache_path)
@@ -38,15 +36,13 @@ class Cacheable:
         self.item_name = item_name
         self._loaded = item
 
+        p = self.cache_path/self.item_name
         if item is None:
-            p = self.cache_path/self.item_name
             if not p.exists():
-                raise RuntimeError(f"When item input is None, a cache at {p} must exist!")
+                raise ValueError(f"When item input is None, a cache at {p} must exist!")
             logging.debug(f"No item provided, loaded cache at {p} when initializing.")
             self._load()
         else:
-            if not dill.pickles(item):
-                raise RuntimeError(f"Input type {type(item)} is not picklable.")
             logging.debug(f"Got item input, caching to {p}.")
             self._cache()
 
@@ -62,21 +58,21 @@ class Cacheable:
     def item(self, new_item):
         if new_item != self._loaded:
             logging.debug("Updating item property.")
-            self._loaded = value
+            self._loaded = new_item
             self._cache()
 
     def _load(self):
         # TODO: Add checks for empty path
-        with open(self.cache_path / self.item_name, 'rb') as f:
+        with (self.cache_path / self.item_name).open('rb') as f:
             logging.debug(f"Loading {f}.")
             loaded = pickle.load(f)
         return loaded
 
     def _cache(self):
         # TODO: Add checks for empty path
-        with open(self.cache_path / self.item_name, 'wb') as f:
+        with (self.cache_path / self.item_name).open('wb') as f:
             logging.debug(f"Dumping {f}.")
-            pickle.dump(self._loaded, sf)
+            pickle.dump(self._loaded, f)
 
     def __repr__(self):
         return f"Cacheable(cache_path={self.cache_path}, item_name={self.item_name})"
