@@ -3,6 +3,8 @@ import torch
 from typing import Any, Union
 from pathlib import Path
 
+import dill
+
 import logging
 logging.getLogger(__name__)
 
@@ -33,22 +35,22 @@ class Cacheable:
         if isinstance(cache_path, str):
             cache_path = Path(cache_path)
         self.cache_path = cache_path
-
         self.item_name = item_name
         self._loaded = item
 
-        logging.debug(f"Initialized {str(self)}.")
-
-        # If the cache exists, and item is None, load it
         if item is None:
             p = self.cache_path/self.item_name
             if not p.exists():
                 raise RuntimeError(f"When item input is None, a cache at {p} must exist!")
-            logging.info(f"No item input, loading cached file at {p}.")
+            logging.debug(f"No item provided, loaded cache at {p} when initializing.")
             self._load()
         else:
+            if not dill.pickles(item):
+                raise RuntimeError(f"Input type {type(item)} is not picklable.")
             logging.debug(f"Got item input, caching to {p}.")
             self._cache()
+
+        logging.debug(f"Initialized {str(self)}.")
 
     @property
     def item(self):
@@ -77,4 +79,4 @@ class Cacheable:
             pickle.dump(self._loaded, sf)
 
     def __repr__(self):
-        return f"Cacheable(cache_path={self.cache_path}, item_name={self.item_name}, loaded={bool(self._loaded)})"
+        return f"Cacheable(cache_path={self.cache_path}, item_name={self.item_name})"
