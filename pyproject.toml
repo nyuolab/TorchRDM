@@ -1,6 +1,6 @@
 [tool.pytest.ini_options]
 testpaths = "tests/"
-log_cli = True
+log_cli = true
 markers = "slow"
 addopts = "--durations=0 --strict-markers --doctest-modules"
 filterwarnings = [
