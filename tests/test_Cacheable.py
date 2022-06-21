@@ -4,24 +4,6 @@ import torch
 import numpy as np
 
 class TestInitialize:
-    def test_missing_cache_path(self, tmp_path):
-        # Test missing cache dir
-        with pytest.raises(ValueError) as einfo:
-            c = Cacheable(
-                item=1,
-                item_name="test"
-            )
-        assert "Cache path" in str(einfo.value)
-
-    def test_missing_item_name(self, tmp_path):
-        # Test missing item name
-        with pytest.raises(ValueError) as einfo:
-            c = Cacheable(
-                item=1,
-                cache_path=tmp_path
-            )
-        assert "Item name" in str(einfo.value)
-
     def test_missing_cache(self, tmp_path):
         with pytest.raises(ValueError) as einfo:
             c = Cacheable(
