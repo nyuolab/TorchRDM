@@ -2,18 +2,6 @@ from src.Cacheable import Cacheable
 import pytest
 import torch
 import numpy as np
-import pickle
-
-def write_file(item, cache_path, filename):
-    with (cache_path/filename).open('wb') as f:
-        pickle.dump(item, f)
-
-
-def load_file(cache_path, filename):
-    with (cache_path/filename).open('rb') as f:
-        out = pickle.load(f)
-    return out
-
 
 class TestInitialize:
     def test_missing_cache_path(self, tmp_path):
@@ -56,7 +44,8 @@ class TestData:
         tmp_path,
         item,
         item_name,
-        close
+        close,
+        read,
     ):
         c = Cacheable(
             item=item,
@@ -73,18 +62,18 @@ class TestData:
         # check we can update the values
         c.item = 0
         assert close(c.item, 0)
-        assert close(load_file(tmp_path, item_name), 0)
+        assert close(read(tmp_path, item_name), 0)
 
     def test_without_input(
             self,
             tmp_path,
             item,
             item_name,
-            close
+            close,
+            write
         ):
         # Manually cache the inputs
-        write_file(item, tmp_path, item_name)
-
+        write(item, tmp_path, item_name)
 
         # Instantiate without the item input
         c = Cacheable(
