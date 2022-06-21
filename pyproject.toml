@@ -1,4 +1,10 @@
 [tool.pytest.ini_options]
-markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+testpaths = "tests/"
+log_cli = true
+markers = "slow"
+addopts = "--durations=0 --strict-markers --doctest-modules"
+filterwarnings = [
+  "ignore::DeprecationWarning",
+  "ignore::UserWarning",
 ]
+
