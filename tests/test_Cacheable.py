@@ -84,7 +84,8 @@ class TestData:
         ):
         # Manually cache the inputs
         write_file(item, tmp_path, item_name)
-        
+
+
         # Instantiate without the item input
         c = Cacheable(
             cache_path=tmp_path,
