@@ -56,17 +56,17 @@ class Cacheable:
 
     @item.setter
     def item(self, new_item):
-        if new_item != self._loaded:
-            logging.debug("Updating item property.")
-            self._loaded = new_item
-            self._cache()
+        # TODO: Add checks for identity? Equal sign comparison could throw errors.
+        logging.debug("Updating item property.")
+        self._loaded = new_item
+        self._cache()
 
     def _load(self):
         # TODO: Add checks for empty path
         with (self.cache_path / self.item_name).open('rb') as f:
             logging.debug(f"Loading {f}.")
             loaded = pickle.load(f)
-        return loaded
+        self._loaded = loaded
 
     def _cache(self):
         # TODO: Add checks for empty path
