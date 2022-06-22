@@ -1,18 +1,19 @@
-import pickle
-from typing import Any, Union
-from pathlib import Path
-
 import logging
+import pickle
+from pathlib import Path
+from typing import Any, Union
+
 logging.getLogger(__name__)
+
 
 class Cacheable:
     def __init__(
         self,
-        cache_path:Union[str, Path],
-        item_name:str,
-        item:Any=None,
+        cache_path: Union[str, Path],
+        item_name: str,
+        item: Any = None,
     ):
-        """Initialize a cacheable
+        """Initialize a cacheable.
 
         Parameters
         ----------
@@ -35,7 +36,7 @@ class Cacheable:
         self.item_name = item_name
         self._loaded = item
 
-        p = self.cache_path/self.item_name
+        p = self.cache_path / self.item_name
         if item is None:
             if not p.exists():
                 raise ValueError(f"When item input is None, a cache at {p} must exist!")
@@ -49,7 +50,10 @@ class Cacheable:
 
     @property
     def item(self) -> Any:
-        """The item property. Will load if we don't have cached."""
+        """The item property.
+
+        Will load if we don't have cached.
+        """
         logging.debug("Loading item property.")
         return self._loaded
 
@@ -62,14 +66,14 @@ class Cacheable:
 
     def _load(self) -> None:
         # TODO: Add checks for empty path
-        with (self.cache_path / self.item_name).open('rb') as f:
+        with (self.cache_path / self.item_name).open("rb") as f:
             logging.debug(f"Loading {f}.")
             loaded = pickle.load(f)
         self._loaded = loaded
 
     def _cache(self) -> None:
         # TODO: Add checks for empty path
-        with (self.cache_path / self.item_name).open('wb') as f:
+        with (self.cache_path / self.item_name).open("wb") as f:
             logging.debug(f"Dumping {f}.")
             pickle.dump(self._loaded, f)
 

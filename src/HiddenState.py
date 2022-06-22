@@ -1,17 +1,21 @@
-from src.Cacheable import Cacheable
-import torch
+import logging
 from pathlib import Path
 from typing import Union
-import logging
+
+import torch
+
+from src.Cacheable import Cacheable
+
 logging.getLogger(__name__)
+
 
 class HiddenState(Cacheable):
     def __init__(
         self,
-        cache_path:Union[str, Path],
-        network_name:str,
-        sample_id:int,
-        hidden:torch.Tensor,
+        cache_path: Union[str, Path],
+        network_name: str,
+        sample_id: int,
+        hidden: torch.Tensor,
     ):
         if isinstance(cache_path, str):
             cache_path = Path(cache_path)
@@ -25,16 +29,14 @@ class HiddenState(Cacheable):
 
         # Initialize parent class
         super().__init__(
-            cache_path=cache_path,
-            item_name=f"hidden_{network_name}_{sample_id}",
-            item=hidden
+            cache_path=cache_path, item_name=f"hidden_{network_name}_{sample_id}", item=hidden
         )
         logging.debug(f"Initialized {str(self)}.")
 
     @staticmethod
     def preprocess(data: torch.Tensor) -> torch.Tensor:
         data = data.detach()
-        data = data.to('cpu')
+        data = data.to("cpu")
         return data
 
     @property
@@ -50,4 +52,3 @@ class HiddenState(Cacheable):
 
     def __repr__(self):
         return f"HiddenState(net={self.network_name}, sample={self.sample_id})"
-
