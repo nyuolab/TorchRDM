@@ -11,20 +11,23 @@ class HiddenState(Cacheable):
         cache_path:Union[str, Path],
         network_name:str,
         sample_id:int,
-        hiddens:torch.Tensor,
+        hidden:torch.Tensor,
     ):
+        if isinstance(cache_path, str):
+            cache_path = Path(cache_path)
+
         self.cache_path = cache_path
         self.network_name = network_name
         self.sample_id = sample_id
 
         # Preprocess the tensor for storage
-        hiddens = self.preprocess(hiddens)
+        hidden = self.preprocess(hidden)
 
         # Initialize parent class
         super().__init__(
             cache_path=cache_path,
-            item_name=f"hiddens_{network_name}_{sample_id}",
-            item=hiddens
+            item_name=f"hidden_{network_name}_{sample_id}",
+            item=hidden
         )
     logging.debug(f"Initialized {str(self)}.")
 
@@ -35,12 +38,12 @@ class HiddenState(Cacheable):
         return data
 
     @property
-    def hiddens(self) -> torch.Tensor:
+    def hidden(self) -> torch.Tensor:
         logging.debug(f"Loading hidden state of {str(self)}.")
         return super().item
 
-    @item.setter
-    def hiddens(self, new_hidden: torch.Tensor) -> None:
+    @hidden.setter
+    def hidden(self, new_hidden: torch.Tensor) -> None:
         logging.debug(f"Updating hidden state of {str(self)}.")
         new_hidden = self.preprocess(new_hidden)
         super().item = new_hidden
