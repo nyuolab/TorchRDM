@@ -1,7 +1,7 @@
 from src.Cacheable import Cacheable
 import torch
 from pathlib import Path
-from typing import Bool
+from typing import Union
 import logging
 logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class HiddenState(Cacheable):
             item_name=f"hidden_{network_name}_{sample_id}",
             item=hidden
         )
-    logging.debug(f"Initialized {str(self)}.")
+        logging.debug(f"Initialized {str(self)}.")
 
     @staticmethod
     def preprocess(data: torch.Tensor) -> torch.Tensor:
