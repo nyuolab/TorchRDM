@@ -29,7 +29,9 @@ class HiddenState(Cacheable):
 
         # Initialize parent class
         super().__init__(
-            cache_path=cache_path, item_name=f"hidden_{network_name}_{sample_id}", item=hidden
+            cache_path=cache_path,
+            item_name=f"hidden_{network_name}_{sample_id}",
+            item=hidden
         )
         logging.debug(f"Initialized {str(self)}.")
 
