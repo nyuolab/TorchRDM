@@ -1,24 +1,29 @@
 import logging
 from pathlib import Path
-from typing import Any, Union, Dict, Tuple, Callable
+from typing import Any, Callable, Dict, Tuple, Union
+
+import torch
+
 from src.Cacheable import Cacheable
 from src.HiddenState import HiddenState
 
 logging.getLogger(__name__)
 
+
 class RDM(Cacheable):
     def __init__(
         self,
-        cache_path: Union[str, Path], 
+        cache_path: Union[str, Path],
         network_name: str,
-        num_samples: int, 
-        sim_func: Callable[[torch.Tensor, torch.Tensor], torch.Tensor]=None,
-        load_cached_hiddens: bool=True,
-        load_cached_rdm: bool=True,
-        subset_samples: List[int]=None
+        num_samples: int,
+        sim_func: Callable[[torch.Tensor, torch.Tensor], torch.Tensor] = None,
+        load_cached_hiddens: bool = True,
+        load_cached_rdm: bool = True,
+        subset_samples: List[int] = None,
     ) -> None:
 
-        """The class to calculate and store RDMs and corresponding hidden states.
+        """The class to calculate and store RDMs and corresponding hidden
+        states.
 
         Parameters
         ----------
@@ -52,20 +57,16 @@ class RDM(Cacheable):
         cached_list = subset_samples if subset_samples is not None else list(range(num_samples))
         cached_exists = self.is_cached(cache_path, network_name, cached_list)
         to_init = None if load_cached_rdm and cached_exists else [[], None]
-        super().__init__(
-            cache_path=cache_path,
-            item_name=f"rdm_{network_name}",
-            item=to_init
-        )
+        super().__init__(cache_path=cache_path, item_name=f"rdm_{network_name}", item=to_init)
         logging.debug(f"Initialized {str(self)}.")
 
     @staticmethod
     def is_cached(
-            cache_path: Union[str, Path],
-            network_name: str,
-            sample_ids: List[int]=None,
-            num_samples: int=None
-        ) -> bool:
+        cache_path: Union[str, Path],
+        network_name: str,
+        sample_ids: List[int] = None,
+        num_samples: int = None,
+    ) -> bool:
         """Check if this RDM is cached.
 
         Parameters
@@ -92,10 +93,7 @@ class RDM(Cacheable):
         return super().is_cached(cache_path, self._format_name(network_name, hidden_keys))
 
     @staticmethod
-    def _format_name(
-        network_name: str,
-        hidden_keys: List[int]
-    ) -> str:
+    def _format_name(network_name: str, hidden_keys: List[int]) -> str:
         """Format a name for this set of features.
 
         Parameters
@@ -122,10 +120,7 @@ class RDM(Cacheable):
         """
         return sorted(self._hiddens.keys())
 
-    def get(
-        self,
-        device: Union[str, torch.device]
-    ) -> Tuple[torch.Tensor, List[int]]:
+    def get(self, device: Union[str, torch.device]) -> Tuple[torch.Tensor, List[int]]:
         """Get the rdm matrix.
 
         Parameters
@@ -136,7 +131,7 @@ class RDM(Cacheable):
         Returns
         -------
         Tuple[torch.Tensor, List[int]]
-            The RDM itself, and the list of sample ids used to compute it. 
+            The RDM itself, and the list of sample ids used to compute it.
         """
         # Check if we updated the hiddens
         hidden_keys = self._get_hidden_keys()
@@ -153,12 +148,8 @@ class RDM(Cacheable):
     def _caclulate(self):
         pass
 
-    def register_hiddens(
-        self,
-        sample_id: int,
-        hidden: torch.Tensor
-    ):
-        # Check if we use cache or not. If we use cache, first try to initialize 
+    def register_hiddens(self, sample_id: int, hidden: torch.Tensor):
+        # Check if we use cache or not. If we use cache, first try to initialize
         if self.use_cache:
             if HiddenState.is_cached(self.cache_path, self.network_name, sample_id):
                 h = HiddenState(self.cache_path, self.network_name, sample_id)
@@ -174,4 +165,3 @@ class RDM(Cacheable):
 
     def __repr__(self):
         return self._format_name(self.network_name, self._get_hidden_keys())
-

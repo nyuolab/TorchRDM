@@ -28,11 +28,7 @@ class HiddenState(Cacheable):
         hidden = self._preprocess(hidden)
 
         # Initialize parent class
-        super().__init__(
-            cache_path=cache_path,
-            item_name=str(self),
-            item=hidden
-        )
+        super().__init__(cache_path=cache_path, item_name=str(self), item=hidden)
         logging.debug(f"Initialized {str(self)}.")
 
     @staticmethod
@@ -43,19 +39,11 @@ class HiddenState(Cacheable):
         return data
 
     @staticmethod
-    def is_cached(
-        cache_path: Union[str, Path],
-        network_name: str,
-        sample_id: int
-    ):
-        return super().is_cached(
-            cache_path, self._format_name(network_name, sample_id))
+    def is_cached(cache_path: Union[str, Path], network_name: str, sample_id: int):
+        return super().is_cached(cache_path, self._format_name(network_name, sample_id))
 
     @staticmethod
-    def _format_name(
-        network_name: str,
-        sample_id: int
-    ):
+    def _format_name(network_name: str, sample_id: int):
         return f"HiddenState(net={network_name}, sample={sample_id})"
 
     @property
