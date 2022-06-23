@@ -25,21 +25,38 @@ class HiddenState(Cacheable):
         self.sample_id = sample_id
 
         # Preprocess the tensor for storage
-        hidden = self.preprocess(hidden)
+        hidden = self._preprocess(hidden)
 
         # Initialize parent class
         super().__init__(
             cache_path=cache_path,
-            item_name=f"hidden_{network_name}_{sample_id}",
+            item_name=str(self),
             item=hidden
         )
         logging.debug(f"Initialized {str(self)}.")
 
     @staticmethod
-    def preprocess(data: torch.Tensor) -> torch.Tensor:
-        data = data.detach()
-        data = data.to("cpu")
+    def _preprocess(data: torch.Tensor) -> torch.Tensor:
+        if data is not None:
+            data = data.detach()
+            data = data.to("cpu")
         return data
+
+    @staticmethod
+    def is_cached(
+        cache_path: Union[str, Path],
+        network_name: str,
+        sample_id: int
+    ):
+        return super().is_cached(
+            cache_path, self._format_name(network_name, sample_id))
+
+    @staticmethod
+    def _format_name(
+        network_name: str,
+        sample_id: int
+    ):
+        return f"HiddenState(net={network_name}, sample={sample_id})"
 
     @property
     def hidden(self) -> torch.Tensor:
@@ -49,8 +66,8 @@ class HiddenState(Cacheable):
     @hidden.setter
     def hidden(self, new_hidden: torch.Tensor) -> None:
         logging.debug(f"Updating hidden state of {str(self)}.")
-        new_hidden = self.preprocess(new_hidden)
+        new_hidden = self._preprocess(new_hidden)
         super().item = new_hidden
 
     def __repr__(self):
-        return f"HiddenState(net={self.network_name}, sample={self.sample_id})"
+        return self._format_name(self.network_name, self.sample_id)
