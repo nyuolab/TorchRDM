@@ -48,6 +48,15 @@ class Cacheable:
 
         logging.debug(f"Initialized {str(self)}.")
 
+    @staticmethod
+    def is_cached(
+        cache_path: Union[str, Path],
+        item_name: str
+    ):
+        if isinstance(cache_path, str):
+            cache_path = Path(cache_path)
+        return (cache_path / Path(item_name)).exists()
+
     @property
     def item(self) -> Any:
         """The item property.
