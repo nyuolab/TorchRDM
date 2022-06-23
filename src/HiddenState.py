@@ -87,7 +87,7 @@ class HiddenState(Cacheable):
         bool
             Whether a cache exists for this specific hidden state.
         """
-        return super().is_cached(cache_path, self._format_name(network_name, sample_id))
+        return Cacheable.is_cached(cache_path, HiddenState._format_name(network_name, sample_id))
 
     @staticmethod
     def _format_name(network_name: str, sample_id: int) -> str:
