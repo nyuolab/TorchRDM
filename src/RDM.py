@@ -1,13 +1,17 @@
 import logging
 from pathlib import Path
-from typing import Any, Callable, Dict, Tuple, Union
+from typing import Callable, Dict, List, Tuple, Union
 
 import torch
 
 from src.Cacheable import Cacheable
 from src.HiddenState import HiddenState
+from src.utils import spearmanr
+
 
 logging.getLogger(__name__)
+
+from itertools import product
 
 
 class RDM(Cacheable):
@@ -90,7 +94,7 @@ class RDM(Cacheable):
                 sample_ids = list(range(num_samples))
             else:
                 raise ValueError("Must provide either a list of sample ids or number of samples.")
-        return super().is_cached(cache_path, self._format_name(network_name, hidden_keys))
+        return Cacheable.is_cached(cache_path, RDM._format_name(network_name, sample_ids))
 
     @staticmethod
     def _format_name(network_name: str, hidden_keys: List[int]) -> str:
@@ -134,7 +138,7 @@ class RDM(Cacheable):
             The RDM itself, and the list of sample ids used to compute it.
         """
         # Check if we updated the hiddens
-        hidden_keys = self._get_hidden_keys()
+        hiddens_keys = self._get_hidden_keys()
         if super().item[0] != hiddens_keys:
             logging.debug("Updating existing RDM...")
             out = self._caclulate()
@@ -145,16 +149,64 @@ class RDM(Cacheable):
 
         return out, hiddens_keys
 
-    def _caclulate(self):
-        pass
+    def _caclulate(self, device='cuda:0'):
+        """Calculates the RDM matrix
+
+        Parameters
+        ----------
+        device : str
+            The device to calculate on
+
+        Returns
+        -------
+        torch.Tensor
+            The output matrix
+        """
+        # Find the hidden keys
+        keys = self._get_hidden_keys()
+
+        # Find the pairwise score
+        inputs = [self._hiddens[k] for k in keys]
+
+        # Setup minibatch
+        N = len(keys)
+        minibatch = 50
+
+        # Initialize the inputs, get all lower triangle indices
+        mtx = torch.zeros(N, N, device=device)
+        indices_all = torch.tril_indices(N, N, -1).T
+
+        # Compute batched output
+        for start_ind in range(0, len(indices_all)**2, minibatch):
+            ind_curr = indices_all[start_ind:start_ind+minibatch]
+            inputs_curr_from = []
+            inputs_curr_to = []
+
+            # Iterate through a batch of indices
+            for ind_x, ind_y in ind_curr:
+                inputs_curr_from.append(torch.Tensor(inputs[ind_x].hidden, device=device))
+                inputs_curr_to.append(torch.Tensor(inputs[ind_y].hidden, device=device))
+
+            # Create stacked tensors
+            inputs_curr_from = torch.stack(inputs_curr_from)
+            inputs_curr_to = torch.stack(inputs_curr_to)
+
+            # Calculate batched values
+            mtx[indices_all[:,0], indices_all[:,1]] = spearmanr(inputs_curr_from, inputs_curr_to)
+
+        # 1-r()
+        mtx = 1-(mtx + mtx.T)
+
+        # Set diagonal to 0
+        mtx = mtx.fill_diagonal_(0)
+
+        # Restore the device to CPU
+        return mtx.cpu()
+
 
     def register_hiddens(self, sample_id: int, hidden: torch.Tensor):
         # Check if we use cache or not. If we use cache, first try to initialize
-        if self.use_cache:
-            if HiddenState.is_cached(self.cache_path, self.network_name, sample_id):
-                h = HiddenState(self.cache_path, self.network_name, sample_id)
-            else:
-                h = HiddenState(self.cache_path, self.network_name, sample_id, hidden)
+        h = HiddenState(self.cache_path, self.network_name, sample_id, hidden)
 
         # Add to the dict in self
         # TODO: This allows overwrite now. Is this desirable?
