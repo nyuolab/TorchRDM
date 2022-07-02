@@ -8,10 +8,7 @@ from src.Cacheable import Cacheable
 from src.HiddenState import HiddenState
 from src.utils import spearmanr
 
-
 logging.getLogger(__name__)
-
-from itertools import product
 
 
 class RDM(Cacheable):
@@ -124,7 +121,16 @@ class RDM(Cacheable):
         """
         return sorted(self._hiddens.keys())
 
-    def get(self, device: Union[str, torch.device]) -> Tuple[torch.Tensor, List[int]]:
+    def __len__(self):
+        return len(self._get_hidden_keys())
+
+    def __getitem__(self, idx):
+        hidden = self._hiddens.get(idx)
+        if hidden is None:
+            raise ValueError(f"No such hidden state {idx}")
+        return hidden
+
+    def get(self, device: Union[str, torch.device] = "cuda:0") -> Tuple[torch.Tensor, List[int]]:
         """Get the rdm matrix.
 
         Parameters
@@ -141,7 +147,7 @@ class RDM(Cacheable):
         hiddens_keys = self._get_hidden_keys()
         if super().item[0] != hiddens_keys:
             logging.debug("Updating existing RDM...")
-            out = self._caclulate()
+            out = self._caclulate(device)
             super().item = [hiddens_keys, out]
         else:
             logging.debug("Loading existing RDM...")
@@ -149,8 +155,8 @@ class RDM(Cacheable):
 
         return out, hiddens_keys
 
-    def _caclulate(self, device='cuda:0'):
-        """Calculates the RDM matrix
+    def _caclulate(self, device: Union[str, torch.device] = "cuda:0"):
+        """Calculates the RDM matrix.
 
         Parameters
         ----------
@@ -162,14 +168,11 @@ class RDM(Cacheable):
         torch.Tensor
             The output matrix
         """
-        # Find the hidden keys
-        keys = self._get_hidden_keys()
-
         # Find the pairwise score
-        inputs = [self._hiddens[k] for k in keys]
+        inputs = [self._hiddens[k] for k in self._get_hidden_keys()]
 
         # Setup minibatch
-        N = len(keys)
+        N = len(self._hiddens)
         minibatch = 50
 
         # Initialize the inputs, get all lower triangle indices
@@ -177,8 +180,8 @@ class RDM(Cacheable):
         indices_all = torch.tril_indices(N, N, -1).T
 
         # Compute batched output
-        for start_ind in range(0, len(indices_all)**2, minibatch):
-            ind_curr = indices_all[start_ind:start_ind+minibatch]
+        for start_ind in range(0, len(indices_all) ** 2, minibatch):
+            ind_curr = indices_all[start_ind : start_ind + minibatch]
             inputs_curr_from = []
             inputs_curr_to = []
 
@@ -192,17 +195,16 @@ class RDM(Cacheable):
             inputs_curr_to = torch.stack(inputs_curr_to)
 
             # Calculate batched values
-            mtx[indices_all[:,0], indices_all[:,1]] = spearmanr(inputs_curr_from, inputs_curr_to)
+            mtx[indices_all[:, 0], indices_all[:, 1]] = spearmanr(inputs_curr_from, inputs_curr_to)
 
         # 1-r()
-        mtx = 1-(mtx + mtx.T)
+        mtx = 1 - (mtx + mtx.T)
 
         # Set diagonal to 0
         mtx = mtx.fill_diagonal_(0)
 
         # Restore the device to CPU
         return mtx.cpu()
-
 
     def register_hiddens(self, sample_id: int, hidden: torch.Tensor):
         # Check if we use cache or not. If we use cache, first try to initialize
