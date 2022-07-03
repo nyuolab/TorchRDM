@@ -56,9 +56,13 @@ class RDM(Cacheable):
 
         # If we allow use of cache and a cache exists, use it
         cached_list = subset_samples if subset_samples is not None else list(range(num_samples))
-        cached_exists = self.is_cached(cache_path, network_name, cached_list)
+        cached_exists = RDM.is_cached(cache_path, network_name, cached_list)
         to_init = None if load_cached_rdm and cached_exists else [[], None]
-        super().__init__(cache_path=cache_path, item_name=f"rdm_{network_name}", item=to_init)
+        super().__init__(
+            cache_path=cache_path,
+            item_name=RDM._format_name(network_name, hidden_keys=cached_list),
+            item=to_init,
+        )
         logging.debug(f"Initialized {str(self)}.")
 
     @staticmethod
@@ -207,7 +211,7 @@ class RDM(Cacheable):
         return mtx.cpu()
 
     def register_hiddens(self, sample_id: int, hidden: torch.Tensor):
-        """Register a hidden state to track with this RDM
+        """Register a hidden state to track with this RDM.
 
         Parameters
         ----------
