@@ -17,7 +17,7 @@ from src.HiddenState import HiddenState
 @pytest.mark.parametrize("hidden_id", list(range(3)))
 @pytest.mark.parametrize("network_name", [f"network{i}" for i in range(3)])
 class TestData:
-    def test_tensor_w_grad(self, tmp_path, hidden, hidden_id, network_name):
+    def test_hidden_tensor_w_grad(self, tmp_path, hidden, hidden_id, network_name):
         hidden = hidden.clone()
 
         # Create gradient in hidden
@@ -34,7 +34,7 @@ class TestData:
             hidden=hidden,
         )
 
-    def test_tensor_is_cached(self, tmp_path, hidden, hidden_id, network_name, close):
+    def test_hidden_tensor_is_cached(self, tmp_path, hidden, hidden_id, network_name, close):
         hidden = hidden.clone()
 
         # There shouldn't be a cache now
@@ -70,7 +70,7 @@ class TestData:
         # The output should be different
         assert not close(h_new.hidden, hidden)
 
-    def test_tensor_is_not_cached(self, tmp_path, hidden, hidden_id, network_name, close):
+    def test_hidden_tensor_is_not_cached(self, tmp_path, hidden, hidden_id, network_name, close):
         hidden = hidden.clone()
 
         # We shouldn't have a cache now
