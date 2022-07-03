@@ -207,6 +207,15 @@ class RDM(Cacheable):
         return mtx.cpu()
 
     def register_hiddens(self, sample_id: int, hidden: torch.Tensor):
+        """Register a hidden state to track with this RDM
+
+        Parameters
+        ----------
+        sample_id : int
+            The id to associate with this hidden state.
+        hidden : torch.Tensor
+            The hidden state tensor.
+        """
         # Check if we use cache or not. If we use cache, first try to initialize
         h = HiddenState(self.cache_path, self.network_name, sample_id, hidden)
 
