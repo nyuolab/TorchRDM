@@ -134,7 +134,7 @@ class RDM(Cacheable):
             raise ValueError(f"No such hidden state {idx}")
         return hidden
 
-    def get(self, device: Union[str, torch.device] = "cuda:0") -> Tuple[torch.Tensor, List[int]]:
+    def get(self, device: Union[str, torch.device] = "cpu") -> Tuple[torch.Tensor, List[int]]:
         """Get the rdm matrix.
 
         Parameters
@@ -159,7 +159,7 @@ class RDM(Cacheable):
 
         return out, hiddens_keys
 
-    def _caclulate(self, device: Union[str, torch.device] = "cuda:0"):
+    def _caclulate(self, device: Union[str, torch.device] = "cpu"):
         """Calculates the RDM matrix.
 
         Parameters
