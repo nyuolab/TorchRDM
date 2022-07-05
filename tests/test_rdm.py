@@ -1,3 +1,5 @@
+import random
+
 import pytest
 import torch
 
@@ -29,7 +31,7 @@ class TestRDM:
             assert close(hidden, rdm[hidden_idx].hidden)
 
     @pytest.mark.parametrize("hidden_shape", [(32, 2), (64, 9), (77, 3)])
-    @pytest.mark.parametrize("num_hiddens_used", [1, 3, -1])
+    @pytest.mark.parametrize("num_hiddens_used", [5, 8, -1])
     def test_rdm_calculate_same(
         self, num_hiddens, network_name, hidden_shape, num_hiddens_used, tmp_path, close
     ):
@@ -55,6 +57,39 @@ class TestRDM:
         for x1, x2 in zip(out1, out2):
             assert close(x1, x2)
 
-    # TODO: Test the output is between 0 and 1; symmetric
+    @pytest.mark.parametrize("hidden_shape", [(32, 2), (64, 9), (77, 3)])
+    @pytest.mark.parametrize("num_hiddens_used", [5, 8, -1])
+    def test_rdm_calculate_basic(
+        self, num_hiddens, network_name, hidden_shape, num_hiddens_used, tmp_path, close
+    ):
+        rdm = RDM(cache_path=tmp_path, network_name=network_name, num_samples=num_hiddens)
 
-    # TODO: Test the corresponding element matches correlation
+        # Randomly generate tensors as hiddens
+        hiddens_to_use = list(range(num_hiddens))
+        random.shuffle(hiddens_to_use)
+
+        if num_hiddens_used > 0:
+            hiddens_to_use = hiddens_to_use[:num_hiddens_used]
+        generated_hiddens = [torch.randn(hidden_shape) for _ in range(len(hiddens_to_use))]
+
+        # Register all
+        for hidden_idx, hidden in zip(hiddens_to_use, generated_hiddens):
+            rdm.register_hiddens(sample_id=hidden_idx, hidden=hidden)
+
+        # Compute
+        mtx, keys = rdm.get()
+
+        # Check the keys correct
+        assert set(keys) == set(hiddens_to_use)
+
+        # Check that the computed output is symmetric
+        assert close(mtx, mtx.T)
+
+        # Check that the values are in [0,2]
+        assert not torch.logical_or(mtx > 2, mtx < 0).any()
+
+        # Check that diagonal is 0
+        assert not (torch.diagonal(mtx) != 0).any()
+
+
+# TODO: A test for matrix correctness?
