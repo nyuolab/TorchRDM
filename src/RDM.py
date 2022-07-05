@@ -149,13 +149,13 @@ class RDM(Cacheable):
         """
         # Check if we updated the hiddens
         hiddens_keys = self._get_hidden_keys()
-        if super().item[0] != hiddens_keys:
+        if self.item[0] != hiddens_keys:
             logging.debug("Updating existing RDM...")
             out = self._caclulate(device)
-            super().item = [hiddens_keys, out]
+            self.item = [hiddens_keys, out]
         else:
             logging.debug("Loading existing RDM...")
-            out = super().item[1]
+            out = self.item[1]
 
         return out, hiddens_keys
 
@@ -177,29 +177,34 @@ class RDM(Cacheable):
 
         # Setup minibatch
         N = len(self._hiddens)
-        minibatch = 50
+        minibatch = min(50, N)
 
         # Initialize the inputs, get all lower triangle indices
         mtx = torch.zeros(N, N, device=device)
         indices_all = torch.tril_indices(N, N, -1).T
 
         # Compute batched output
-        for start_ind in range(0, len(indices_all) ** 2, minibatch):
+        for start_ind in range(0, len(indices_all), minibatch):
             ind_curr = indices_all[start_ind : start_ind + minibatch]
             inputs_curr_from = []
             inputs_curr_to = []
 
             # Iterate through a batch of indices
             for ind_x, ind_y in ind_curr:
-                inputs_curr_from.append(torch.Tensor(inputs[ind_x].hidden, device=device))
-                inputs_curr_to.append(torch.Tensor(inputs[ind_y].hidden, device=device))
+                inputs_curr_from.append(
+                    torch.tensor(inputs[ind_x.item()].hidden.flatten(), device=device)
+                )
+                inputs_curr_to.append(
+                    torch.tensor(inputs[ind_y.item()].hidden.flatten(), device=device)
+                )
 
             # Create stacked tensors
             inputs_curr_from = torch.stack(inputs_curr_from)
             inputs_curr_to = torch.stack(inputs_curr_to)
 
             # Calculate batched values
-            mtx[indices_all[:, 0], indices_all[:, 1]] = spearmanr(inputs_curr_from, inputs_curr_to)
+            out = spearmanr(inputs_curr_from, inputs_curr_to)
+            mtx[ind_curr[:, 0], ind_curr[:, 1]] = out
 
         # 1-r()
         mtx = 1 - (mtx + mtx.T)
@@ -222,6 +227,8 @@ class RDM(Cacheable):
         """
         # Check if we use cache or not. If we use cache, first try to initialize
         h = HiddenState(self.cache_path, self.network_name, sample_id, hidden)
+
+        # TODO: Warning for different sizes, pad to largest size
 
         # Add to the dict in self
         # TODO: This allows overwrite now. Is this desirable?
