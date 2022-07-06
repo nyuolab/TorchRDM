@@ -56,11 +56,11 @@ class RDM(Cacheable):
 
         # If we allow use of cache and a cache exists, use it
         cached_list = subset_samples if subset_samples is not None else list(range(num_samples))
-        cached_exists = RDM.is_cached(cache_path, network_name, cached_list)
+        cached_exists = self.is_cached(cache_path, network_name, cached_list)
         to_init = None if load_cached_rdm and cached_exists else [[], None]
         super().__init__(
             cache_path=cache_path,
-            item_name=RDM._format_name(network_name, hidden_keys=cached_list),
+            item_name=self._format_name(network_name, hidden_keys=cached_list),
             item=to_init,
         )
         logging.debug(f"Initialized {str(self)}.")
@@ -69,7 +69,7 @@ class RDM(Cacheable):
     def is_cached(
         cache_path: Union[str, Path],
         network_name: str,
-        sample_ids: List[Union[int,str]] = None,
+        sample_ids: List[Union[int, str]] = None,
         num_samples: int = None,
     ) -> bool:
         """Check if this RDM is cached.
@@ -98,7 +98,7 @@ class RDM(Cacheable):
         return Cacheable.is_cached(cache_path, RDM._format_name(network_name, sample_ids))
 
     @staticmethod
-    def _format_name(network_name: str, hidden_keys: List[Union[int]]) -> str:
+    def _format_name(network_name: str, hidden_keys: List[Union[int, str]]) -> str:
         """Format a name for this set of features.
 
         Parameters
@@ -113,7 +113,7 @@ class RDM(Cacheable):
         str
             The name for a corresponding object.
         """
-        return f"RDM(network_name={network_name}, sample_ids={hidden_keys})"
+        return f"{RDM._print_name}(network_name={network_name}, sample_ids={hidden_keys})"
 
     def _get_hidden_keys(self):
         """Simple helper to find keys of hiddens collected so far.
@@ -134,7 +134,9 @@ class RDM(Cacheable):
             raise ValueError(f"No such hidden state {idx}")
         return hidden
 
-    def get(self, device: Union[str, torch.device] = "cpu") -> Tuple[torch.Tensor, List[Union[int]]]:
+    def get(
+        self, device: Union[str, torch.device] = "cpu"
+    ) -> Tuple[torch.Tensor, List[Union[int, str]]]:
         """Get the rdm matrix.
 
         Parameters
@@ -144,7 +146,7 @@ class RDM(Cacheable):
 
         Returns
         -------
-        Tuple[torch.Tensor, List[Union[int]]]
+        Tuple[torch.Tensor, List[Union[int,str]]]
             The RDM itself, and the list of sample ids used to compute it.
         """
         # Check if we updated the hiddens
@@ -159,13 +161,16 @@ class RDM(Cacheable):
 
         return out, hiddens_keys
 
-    def get_size_indices(self, device):
+    def _get_size_indices(self, device):
         N = len(self._hiddens)
 
         # Initialize the inputs, get all lower triangle indices
         mtx = torch.zeros(N, N, device=device)
         indices_all = torch.tril_indices(N, N, -1).T
         return mtx, indices_all
+
+    def _retrieve_hidden(self, idx):
+        return self._hiddens[idx].hidden
 
     def _caclulate(self, device: Union[str, torch.device] = "cpu"):
         """Calculates the RDM matrix.
@@ -180,11 +185,9 @@ class RDM(Cacheable):
         torch.Tensor
             The output matrix
         """
-        # Find the pairwise score
-        inputs = [self._hiddens[k] for k in self._get_hidden_keys()]
 
         # Get the indices and empty matrix
-        mtx, indices_all = self.get_size_indices(device)
+        mtx, indices_all = self._get_size_indices(device)
         minibatch = min(50, len(indices_all))
 
         # Compute batched output
@@ -195,12 +198,8 @@ class RDM(Cacheable):
 
             # Iterate through a batch of indices
             for ind_x, ind_y in ind_curr:
-                inputs_curr_from.append(
-                    torch.tensor(inputs[ind_x.item()].hidden.flatten(), device=device)
-                )
-                inputs_curr_to.append(
-                    torch.tensor(inputs[ind_y.item()].hidden.flatten(), device=device)
-                )
+                inputs_curr_from.append(self._retrieve_hidden(ind_x.item()).flatten().to(device))
+                inputs_curr_to.append(self._retrieve_hidden(ind_y.item()).flatten().to(device))
 
             # Create stacked tensors
             inputs_curr_from = torch.stack(inputs_curr_from)
@@ -219,7 +218,7 @@ class RDM(Cacheable):
         # Restore the device to CPU
         return mtx.cpu()
 
-    def register_hiddens(self, sample_id: Union[int,str], hidden: torch.Tensor):
+    def register_hiddens(self, sample_id: Union[int, str], hidden: torch.Tensor):
         """Register a hidden state to track with this RDM.
 
         Parameters
