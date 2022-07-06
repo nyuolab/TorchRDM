@@ -52,7 +52,7 @@ class RDM(Cacheable):
         self.sim_func = sim_func
 
         # Hiddens store the hiddens objects
-        self._hiddens: Dict[int, HiddenState] = {}
+        self._hiddens: Dict[Union[int, str], HiddenState] = {}
 
         # If we allow use of cache and a cache exists, use it
         cached_list = subset_samples if subset_samples is not None else list(range(num_samples))
@@ -69,7 +69,7 @@ class RDM(Cacheable):
     def is_cached(
         cache_path: Union[str, Path],
         network_name: str,
-        sample_ids: List[int] = None,
+        sample_ids: List[Union[int,str]] = None,
         num_samples: int = None,
     ) -> bool:
         """Check if this RDM is cached.
@@ -80,7 +80,7 @@ class RDM(Cacheable):
             The path to store the cache.
         network_name : str
             The name of the network.
-        sample_ids : List[int]
+        sample_ids : List[Union[int, str]]
             The sample ids to check for. If want the entire list, leave empty.
         num_samples : int
             The number of samples to check for. Must not be None when sample_ids is None.
@@ -98,14 +98,14 @@ class RDM(Cacheable):
         return Cacheable.is_cached(cache_path, RDM._format_name(network_name, sample_ids))
 
     @staticmethod
-    def _format_name(network_name: str, hidden_keys: List[int]) -> str:
+    def _format_name(network_name: str, hidden_keys: List[Union[int]]) -> str:
         """Format a name for this set of features.
 
         Parameters
         ----------
         network_name : str
             The name of the network.
-        hidden_keys : List[int]
+        hidden_keys : List[Union[int,str]]
             The sample ids contained in this rdm.
 
         Returns
@@ -120,7 +120,7 @@ class RDM(Cacheable):
 
         Returns
         -------
-        List[int]
+        List[Union[int,str]]
             The list of sample ids.
         """
         return sorted(self._hiddens.keys())
@@ -134,7 +134,7 @@ class RDM(Cacheable):
             raise ValueError(f"No such hidden state {idx}")
         return hidden
 
-    def get(self, device: Union[str, torch.device] = "cpu") -> Tuple[torch.Tensor, List[int]]:
+    def get(self, device: Union[str, torch.device] = "cpu") -> Tuple[torch.Tensor, List[Union[int]]]:
         """Get the rdm matrix.
 
         Parameters
@@ -144,7 +144,7 @@ class RDM(Cacheable):
 
         Returns
         -------
-        Tuple[torch.Tensor, List[int]]
+        Tuple[torch.Tensor, List[Union[int]]]
             The RDM itself, and the list of sample ids used to compute it.
         """
         # Check if we updated the hiddens
@@ -158,6 +158,14 @@ class RDM(Cacheable):
             out = self.item[1]
 
         return out, hiddens_keys
+
+    def get_size_indices(self, device):
+        N = len(self._hiddens)
+
+        # Initialize the inputs, get all lower triangle indices
+        mtx = torch.zeros(N, N, device=device)
+        indices_all = torch.tril_indices(N, N, -1).T
+        return mtx, indices_all
 
     def _caclulate(self, device: Union[str, torch.device] = "cpu"):
         """Calculates the RDM matrix.
@@ -175,13 +183,9 @@ class RDM(Cacheable):
         # Find the pairwise score
         inputs = [self._hiddens[k] for k in self._get_hidden_keys()]
 
-        # Setup minibatch
-        N = len(self._hiddens)
-        minibatch = min(50, N)
-
-        # Initialize the inputs, get all lower triangle indices
-        mtx = torch.zeros(N, N, device=device)
-        indices_all = torch.tril_indices(N, N, -1).T
+        # Get the indices and empty matrix
+        mtx, indices_all = self.get_size_indices(device)
+        minibatch = min(50, len(indices_all))
 
         # Compute batched output
         for start_ind in range(0, len(indices_all), minibatch):
@@ -215,12 +219,12 @@ class RDM(Cacheable):
         # Restore the device to CPU
         return mtx.cpu()
 
-    def register_hiddens(self, sample_id: int, hidden: torch.Tensor):
+    def register_hiddens(self, sample_id: Union[int,str], hidden: torch.Tensor):
         """Register a hidden state to track with this RDM.
 
         Parameters
         ----------
-        sample_id : int
+        sample_id : Union[int,str]
             The id to associate with this hidden state.
         hidden : torch.Tensor
             The hidden state tensor.
