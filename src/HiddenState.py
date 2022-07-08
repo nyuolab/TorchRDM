@@ -14,7 +14,7 @@ class HiddenState(Cacheable):
         self,
         cache_path: Union[str, Path],
         network_name: str,
-        sample_id: int,
+        sample_id: Union[int, str],
         hidden: torch.Tensor,
         load_cached_hidden: bool = True,
     ):

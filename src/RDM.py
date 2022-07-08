@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 
@@ -16,7 +16,7 @@ class RDM(Cacheable):
         self,
         cache_path: Union[str, Path],
         network_name: str,
-        sim_func: Callable[[torch.Tensor, torch.Tensor], torch.Tensor] = None,
+        sim_func: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]] = None,
         load_cached_hiddens: bool = True,
         load_cached_rdm: bool = True,
     ) -> None:
