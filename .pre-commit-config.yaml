@@ -31,13 +31,6 @@ repos:
       - id: docformatter
         args: [--in-place, --wrap-summaries, "80", --wrap-descriptions, "80"]
 
-  # yaml formatting
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.5.1
-    hooks:
-      - id: prettier
-        types: [yaml]
-
   # python code analysis
   - repo: https://github.com/PyCQA/flake8
     rev: 4.0.1

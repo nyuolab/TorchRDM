@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 
@@ -16,11 +16,9 @@ class RDM(Cacheable):
         self,
         cache_path: Union[str, Path],
         network_name: str,
-        num_samples: int,
-        sim_func: Callable[[torch.Tensor, torch.Tensor], torch.Tensor] = None,
+        sim_func: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]] = None,
         load_cached_hiddens: bool = True,
         load_cached_rdm: bool = True,
-        subset_samples: List[int] = None,
     ) -> None:
 
         """The class to calculate and store RDMs and corresponding hidden
@@ -32,8 +30,6 @@ class RDM(Cacheable):
             The path to store the cache.
         network_name : str
             The name of the network.
-        num_samples : int
-            The number of samples to calculate for.
         sim_func : Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
             The similarity function to use.
         load_cached_hiddens : bool
@@ -52,15 +48,15 @@ class RDM(Cacheable):
         self.sim_func = sim_func
 
         # Hiddens store the hiddens objects
-        self._hiddens: Dict[int, HiddenState] = {}
+        self._hiddens: Dict[Union[int, str], HiddenState] = {}
+        self.mapping: List[Union[int, str]] = []
 
         # If we allow use of cache and a cache exists, use it
-        cached_list = subset_samples if subset_samples is not None else list(range(num_samples))
-        cached_exists = RDM.is_cached(cache_path, network_name, cached_list)
+        cached_exists = self.is_cached(cache_path, network_name)
         to_init = None if load_cached_rdm and cached_exists else [[], None]
         super().__init__(
             cache_path=cache_path,
-            item_name=RDM._format_name(network_name, hidden_keys=cached_list),
+            item_name=self._format_name(network_name),
             item=to_init,
         )
         logging.debug(f"Initialized {str(self)}.")
@@ -69,8 +65,6 @@ class RDM(Cacheable):
     def is_cached(
         cache_path: Union[str, Path],
         network_name: str,
-        sample_ids: List[int] = None,
-        num_samples: int = None,
     ) -> bool:
         """Check if this RDM is cached.
 
@@ -80,32 +74,23 @@ class RDM(Cacheable):
             The path to store the cache.
         network_name : str
             The name of the network.
-        sample_ids : List[int]
-            The sample ids to check for. If want the entire list, leave empty.
-        num_samples : int
-            The number of samples to check for. Must not be None when sample_ids is None.
 
         Returns
         -------
         bool
             Whether the said RDM object has already been cached.
         """
-        if sample_ids is None:
-            if num_samples is not None:
-                sample_ids = list(range(num_samples))
-            else:
-                raise ValueError("Must provide either a list of sample ids or number of samples.")
-        return Cacheable.is_cached(cache_path, RDM._format_name(network_name, sample_ids))
+        return Cacheable.is_cached(cache_path, RDM._format_name(network_name))
 
     @staticmethod
-    def _format_name(network_name: str, hidden_keys: List[int]) -> str:
+    def _format_name(network_name: str, keys: Optional[List[Union[int, str]]] = None) -> str:
         """Format a name for this set of features.
 
         Parameters
         ----------
         network_name : str
             The name of the network.
-        hidden_keys : List[int]
+        hidden_keys : List[Union[int,str]]
             The sample ids contained in this rdm.
 
         Returns
@@ -113,14 +98,17 @@ class RDM(Cacheable):
         str
             The name for a corresponding object.
         """
-        return f"RDM(network_name={network_name}, sample_ids={hidden_keys})"
+        if keys:
+            return f"RDM(network_name={network_name})"
+        else:
+            return f"RDM(network_name={network_name}, hiddens={keys})"
 
     def _get_hidden_keys(self):
         """Simple helper to find keys of hiddens collected so far.
 
         Returns
         -------
-        List[int]
+        List[Union[int,str]]
             The list of sample ids.
         """
         return sorted(self._hiddens.keys())
@@ -134,7 +122,9 @@ class RDM(Cacheable):
             raise ValueError(f"No such hidden state {idx}")
         return hidden
 
-    def get(self, device: Union[str, torch.device] = "cpu") -> Tuple[torch.Tensor, List[int]]:
+    def get(
+        self, device: Union[str, torch.device] = "cpu"
+    ) -> Tuple[torch.Tensor, List[Union[int, str]]]:
         """Get the rdm matrix.
 
         Parameters
@@ -144,7 +134,7 @@ class RDM(Cacheable):
 
         Returns
         -------
-        Tuple[torch.Tensor, List[int]]
+        Tuple[torch.Tensor, List[Union[int,str]]]
             The RDM itself, and the list of sample ids used to compute it.
         """
         # Check if we updated the hiddens
@@ -159,6 +149,17 @@ class RDM(Cacheable):
 
         return out, hiddens_keys
 
+    def _get_size_indices(self, device):
+        N = len(self._hiddens)
+
+        # Initialize the inputs, get all lower triangle indices
+        mtx = torch.zeros(N, N, device=device)
+        indices_all = torch.tril_indices(N, N, -1).T
+        return mtx, indices_all
+
+    def _retrieve_hidden_index(self, idx):
+        return self._hiddens[self._get_hidden_keys()[idx]].hidden
+
     def _caclulate(self, device: Union[str, torch.device] = "cpu"):
         """Calculates the RDM matrix.
 
@@ -172,16 +173,10 @@ class RDM(Cacheable):
         torch.Tensor
             The output matrix
         """
-        # Find the pairwise score
-        inputs = [self._hiddens[k] for k in self._get_hidden_keys()]
 
-        # Setup minibatch
-        N = len(self._hiddens)
-        minibatch = min(50, N)
-
-        # Initialize the inputs, get all lower triangle indices
-        mtx = torch.zeros(N, N, device=device)
-        indices_all = torch.tril_indices(N, N, -1).T
+        # Get the indices and empty matrix
+        mtx, indices_all = self._get_size_indices(device)
+        minibatch = min(50, len(indices_all))
 
         # Compute batched output
         for start_ind in range(0, len(indices_all), minibatch):
@@ -192,10 +187,10 @@ class RDM(Cacheable):
             # Iterate through a batch of indices
             for ind_x, ind_y in ind_curr:
                 inputs_curr_from.append(
-                    torch.tensor(inputs[ind_x.item()].hidden.flatten(), device=device)
+                    self._retrieve_hidden_index(ind_x.item()).flatten().to(device)
                 )
                 inputs_curr_to.append(
-                    torch.tensor(inputs[ind_y.item()].hidden.flatten(), device=device)
+                    self._retrieve_hidden_index(ind_y.item()).flatten().to(device)
                 )
 
             # Create stacked tensors
@@ -215,12 +210,12 @@ class RDM(Cacheable):
         # Restore the device to CPU
         return mtx.cpu()
 
-    def register_hiddens(self, sample_id: int, hidden: torch.Tensor):
+    def register_hiddens(self, sample_id: Union[int, str], hidden: torch.Tensor):
         """Register a hidden state to track with this RDM.
 
         Parameters
         ----------
-        sample_id : int
+        sample_id : Union[int,str]
             The id to associate with this hidden state.
         hidden : torch.Tensor
             The hidden state tensor.
