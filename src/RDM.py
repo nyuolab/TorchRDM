@@ -83,7 +83,7 @@ class RDM(Cacheable):
         return Cacheable.is_cached(cache_path, RDM._format_name(network_name))
 
     @staticmethod
-    def _format_name(network_name: str, keys: List[Union[int, str]] = None) -> str:
+    def _format_name(network_name: str, keys: Optional[List[Union[int, str]]] = None) -> str:
         """Format a name for this set of features.
 
         Parameters
