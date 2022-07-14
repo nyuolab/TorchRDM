@@ -56,11 +56,13 @@ def preservation_index(rdm: torch.Tensor) -> float:
     float
         The preservation index.
     """
-    pre_post = gpsr(rdm, "pre-post")
+    # Inverting the value since we are interested in similarity here
+    pre_post = 1 - gpsr(rdm, "pre-post")
     z_score = torch.arctanh(pre_post)
 
     diag = z_score.diag().mean()
     z_score.fill_diagonal_(0)
+
     off_diag = z_score.sum() / (33**2 - 33)
 
     return ((diag - off_diag) / off_diag).item()
