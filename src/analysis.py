@@ -1,8 +1,10 @@
 from itertools import combinations
-from typing import Dict
+from typing import Any, Dict, List, Optional, Tuple
 
 import torch
+from sklearn.manifold import trustworthiness
 
+from src.utils import dim_reduce
 from src.utils import get_phase_sub_rdm as gpsr
 
 
@@ -62,3 +64,48 @@ def preservation_index(rdm: torch.Tensor) -> float:
     off_diag = z_score.sum() / (33**2 - 33)
 
     return ((diag - off_diag) / off_diag).item()
+
+
+def minimum_dimension(
+    list_rdm: List[torch.Tensor],
+    range_dimension: Tuple[int, int] = (2, 20),
+    tolerance_trustworthy: float = 0.9,
+    reducer_args: Optional[Dict[Any, Any]] = None,
+) -> List[int]:
+
+    """Find the minimum dimension required to describe each RDM.
+
+    Parameters
+    ----------
+    list_rdm : List[torch.Tensor]
+        The list of RDM to evaluate.
+    range_dimension : Tuple[int, int]
+        The lower and upper dimension to consider.
+    tolerance_trustworthy : float
+        The threshold of trustworthiness to be considered good fit.
+    reducer_args : Optional[Dict[Any, Any]]
+        The additional arguments to the reducer.
+
+    Returns
+    -------
+    List[int]
+        The list of dimensions required.
+    """
+    if reducer_args is None:
+        reducer_args = {}
+
+    # Initialize ouputs
+    outputs = [-1] * len(list_rdm)
+
+    for rdm_idx, rdm in enumerate(list_rdm):
+        for dim_try in reversed(range(*range_dimension)):
+            # TODO: Add basic sweeping of MDS parameters
+
+            # Reduce dimension and then find trustworthiness
+            reduced = dim_reduce(rdm=rdm, dim=dim_try, **reducer_args)
+            t = trustworthiness(rdm, reduced)
+
+            if t > tolerance_trustworthy:
+                outputs[rdm_idx] = dim_try
+
+    return outputs
