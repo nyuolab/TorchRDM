@@ -29,7 +29,7 @@ def generate_rdm(num_hiddens, hiddens_shape, network_name, cache_path):
 # TODO: Test the utils, like get sub rdm
 
 
-@pytest.mark.parametrize("num_samples", [15, 20])
+@pytest.mark.parametrize("num_samples", [18, 27])  # TODO: Currently we are hard coding this
 @pytest.mark.parametrize("hidden_shape", [(10, 20), (20, 3)])
 class TestAnalysis:
     # TODO: Add correctness check too
@@ -39,7 +39,7 @@ class TestAnalysis:
 
         for k, v in out.items():
             assert k in ["pre", "post", "gray"]
-            assert v > 0 and v < 1
+            assert v > 0 and v < 2
 
     def test_inter(self, tmp_path, num_samples, hidden_shape):
         rdm = generate_rdm(num_samples, hidden_shape, "network", tmp_path)
@@ -48,7 +48,7 @@ class TestAnalysis:
         keys = ["-".join(pair) for pair in combinations(["pre", "post", "gray"], 2)]
         for k, v in out.items():
             assert k in keys
-            assert v > 0 and v < 1
+            assert v > 0 and v < 2
 
     def test_preservation_index(self, tmp_path, num_samples, hidden_shape):
         rdm = generate_rdm(num_samples, hidden_shape, "network", tmp_path)
