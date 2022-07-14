@@ -63,8 +63,8 @@ def preservation_index(rdm: torch.Tensor) -> float:
     diag = z_score.diag().mean()
     z_score.fill_diagonal_(0)
 
-    off_diag = z_score.sum() / (33**2 - 33)
-
+    n = len(rdm) // 3
+    off_diag = z_score.sum() / (n**2 - n)
     return ((diag - off_diag) / off_diag).item()
 
 
