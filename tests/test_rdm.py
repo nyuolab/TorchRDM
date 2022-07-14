@@ -6,14 +6,16 @@ import torch
 from src.RDM import RDM
 
 
+@pytest.mark.parametrize("network_name", [f"network{i}" for i in range(2)])
+def test_rdm_cache(network_name, tmp_path):
+    assert not RDM.is_cached(tmp_path, network_name)
+    RDM(cache_path=tmp_path, network_name=network_name)
+    assert RDM.is_cached(tmp_path, network_name)
+
+
 @pytest.mark.parametrize("num_hiddens", [10, 20])
 @pytest.mark.parametrize("network_name", [f"network{i}" for i in range(2)])
 class TestRDM:
-    def test_rdm_cache(self, num_hiddens, network_name, tmp_path):
-        assert not RDM.is_cached(tmp_path, network_name)
-        RDM(cache_path=tmp_path, network_name=network_name)
-        assert RDM.is_cached(tmp_path, network_name)
-
     @pytest.mark.parametrize("hidden_size", [32, 64, 77])
     def test_rdm_register(self, num_hiddens, network_name, hidden_size, tmp_path, close):
         rdm = RDM(cache_path=tmp_path, network_name=network_name)

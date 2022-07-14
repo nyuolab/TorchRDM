@@ -102,7 +102,7 @@ def minimum_dimension(
             # TODO: Add basic sweeping of MDS parameters
 
             # Reduce dimension and then find trustworthiness
-            reduced = dim_reduce(rdm=rdm, dim=dim_try, **reducer_args)
+            reduced = dim_reduce(rdm=rdm, dim=dim_try, method="MDS", **reducer_args)
             t = trustworthiness(rdm, reduced)
 
             if t > tolerance_trustworthy:
