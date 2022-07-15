@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
@@ -7,6 +8,13 @@ import torch
 from src.Cacheable import Cacheable
 from src.HiddenState import HiddenState
 from src.utils import spearmanr
+
+
+@dataclass
+class ComputeOut:
+    rdm: torch.Tensor
+    hidden_keys: List[Union[int, str]]
+
 
 logging.getLogger(__name__)
 
@@ -122,9 +130,7 @@ class RDM(Cacheable):
             raise ValueError(f"No such hidden state {idx}")
         return hidden
 
-    def get(
-        self, device: Union[str, torch.device] = "cpu"
-    ) -> Tuple[torch.Tensor, List[Union[int, str]]]:
+    def get(self, device: Union[str, torch.device] = "cpu") -> ComputeOut:
         """Get the rdm matrix.
 
         Parameters
@@ -147,7 +153,7 @@ class RDM(Cacheable):
             logging.debug("Loading existing RDM...")
             out = self.item[1]
 
-        return out, hiddens_keys
+        return ComputeOut(out, hiddens_keys)
 
     def _get_size_indices(self, device):
         N = len(self._hiddens)
