@@ -36,6 +36,10 @@ class RDMFinder:
             A dictionary to specify which submodule of the network to evaluate and their name.
         image_paths : Dict[int, Path]
             A dictionary containing image and their id. Grayscale images start from 1, and their Mooney version starts from -1.
+        image_size : int
+            The size of image to use when passing into the model.
+        n_img_per_phase : int
+            The number of image in pre, post, and gray stage. Defaults to 6.
         reps : int
             Number of repetitions to calculate.
         load_cached_hiddens : bool
@@ -43,14 +47,13 @@ class RDMFinder:
         load_cached_rdm : bool
             Whether to cache RDM.
         """
+        self.reps = reps
+        self.model = model
+        self.roi_dict = roi_dict
         self.cache_path = cache_path
         self.network_name = network_name
-        self.model = model
-        self.reps = reps
         self.load_cached_rdm = load_cached_rdm
         self.load_cached_hiddens = load_cached_hiddens
-
-        self.roi_dict = roi_dict
 
         # Create the dataset
         self.dataset = MooneyDataset(

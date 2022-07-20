@@ -1,6 +1,7 @@
 from itertools import product
 from pathlib import Path
 from typing import Dict
+from math import ceil
 
 import torch
 from PIL import Image
@@ -47,12 +48,11 @@ class MooneyDataset(Dataset):
         gray_img_offset = 2 * N
 
         # Generate raw_image_indices by permuting and padding
-        images = torch.arange(N)[torch.randperm(N)]
-        to_pad = N % (2 * self.n_img_per_phase)
+        images = torch.arange(N)[torch.randperm(N)]+1
+        to_pad = ceil(N/(2*self.n_img_per_phase))*2*self.n_img_per_phase - N
         extra_images = images[torch.randperm(N)[:to_pad]]
-        print(extra_images.shape)
-        print(to_pad)
-        print(images.shape)
+
+        # To find pad
         raw_image_indices = torch.cat(
                 [images, extra_images]
             ).reshape(-1, 2 * self.n_img_per_phase)
@@ -66,12 +66,15 @@ class MooneyDataset(Dataset):
         raw_image_indices[:, gray_start:post_start] = (
             raw_image_indices[:, gray_start:post_start] + gray_img_offset
         )
+
         raw_image_indices[:, post_start:] = raw_image_indices[:, post_start:] + post_img_offset
         self.image_indices = raw_image_indices
 
         # Generate file name library
         file_names = self.image_indices
-        self.file_names = file_names % N
+        file_names[file_names>2*N] = 2*N - file_names[file_names>2*N]
+        file_names[file_names>N] = N - file_names[file_names>N]
+        self.file_names = file_names
 
     def __len__(self) -> int:
         return len(self.image_indices)

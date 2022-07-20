@@ -15,14 +15,14 @@ import pytest
 
 
 # Only do once for this module
-def image_dict(n_img, path, image_size):
+def image_dict(n_img, cache_path, image_size):
     imgs: Dict[int, Path]  = {}
     for idx in range(1, n_img+1):
         for prefix in [-1, 1]:
             arr = np.random.randint(0, 256, size=(image_size,image_size))
             im = Image.fromarray(arr, mode="L")
-            p = Path(f"{prefix*idx}.png")
-            im.save(path / p)
+            p = cache_path / Path(f"{prefix*idx}.png")
+            im.save(p)
 
             # Save the image
             imgs[prefix*idx] = p
@@ -30,7 +30,7 @@ def image_dict(n_img, path, image_size):
 
 @pytest.mark.parametrize("num_img", [10, 20])
 @pytest.mark.parametrize("image_size", [21, 64])
-@pytest.mark.parametrize("n_img_per_phase", [3, 5])
+@pytest.mark.parametrize("n_img_per_phase", [3, 6])
 def test_finder(tmp_path, num_img, image_size, n_img_per_phase):
     img_dict = image_dict(num_img, tmp_path, image_size)
 
@@ -40,6 +40,7 @@ def test_finder(tmp_path, num_img, image_size, n_img_per_phase):
         nn.Linear(5, 5),
     )
 
+    # Instantiate finder
     finder = RDMFinder(
         cache_path=tmp_path,
         model=model,
@@ -53,6 +54,8 @@ def test_finder(tmp_path, num_img, image_size, n_img_per_phase):
         n_img_per_phase=n_img_per_phase,
         reps=6,
     )
+
+    # TODO: Refactor RDM validity test as a fixture and test correctness here too
 
     finder.compute()
     # Check the keys
