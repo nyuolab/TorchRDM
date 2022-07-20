@@ -1,3 +1,4 @@
+from itertools import product
 from pathlib import Path
 from typing import Dict
 
@@ -39,6 +40,7 @@ class SimpleModel(nn.Module):
 @pytest.mark.parametrize("n_img_per_phase", [3, 6])
 def test_finder(tmp_path, num_img, image_size, n_img_per_phase, valid_rdm):
     img_dict = image_dict(num_img, tmp_path, image_size)
+    reps = 6
 
     # Create a simple model
     model = SimpleModel()
@@ -48,7 +50,7 @@ def test_finder(tmp_path, num_img, image_size, n_img_per_phase, valid_rdm):
         "layer1": model.m1,
         "layer2": model.m2,
     }
-    rdm_names = list(roi_dict.keys())
+    rdm_names = [f"{roi}-rep{rep}" for roi, rep in product(roi_dict.keys(), range(reps))]
 
     # Instantiate finder
     finder = RDMFinder(
@@ -59,7 +61,7 @@ def test_finder(tmp_path, num_img, image_size, n_img_per_phase, valid_rdm):
         image_paths=img_dict,
         image_size=image_size,
         n_img_per_phase=n_img_per_phase,
-        reps=6,
+        reps=reps,
     )
 
     # Find sample ids

@@ -87,7 +87,7 @@ class RDMFinder:
             )
 
             # Keep track of the RDM
-            out[roi_name] = rdm
+            out[f"{roi_name}-rep{self.rep_curr}"] = rdm
 
             # Register forward hooks
             _hook = hook(rdm, self.dataset)
