@@ -9,11 +9,12 @@ from torchvision import transforms
 
 from src.RDM import RDM
 
-image_size = 128
-n_img_per_phase = 6
 
-
-def get_img_sequence(img_ids: torch.Tensor, img_paths: Dict[int, Path]) -> torch.Tensor:
+def get_img_sequence(
+        img_ids: torch.Tensor,
+        img_paths: Dict[int, Path],
+        image_size: int
+    ) -> torch.Tensor:
     img_transforms = transforms.Compose(
         [
             transforms.Resize((image_size, image_size)),
@@ -25,28 +26,40 @@ def get_img_sequence(img_ids: torch.Tensor, img_paths: Dict[int, Path]) -> torch
 
 
 class MooneyDataset(Dataset):
-    def __init__(self, image_paths: Dict[int, Path]) -> None:
+    def __init__(
+            self,
+            image_paths: Dict[int, Path],
+            image_size: int = 128,
+            n_img_per_phase: int = 6
+        ) -> None:
+        self.image_size = image_size
+        self.n_img_per_phase = n_img_per_phase
         self.image_paths = image_paths
         self.reset()
 
     def reset(self):
-        N = len(self.image_paths)
+        N = len(self.image_paths)//2
 
-        gray_start = n_img_per_phase
-        post_start = 2 * n_img_per_phase
+        gray_start = self.n_img_per_phase
+        post_start = 2 * gray_start
 
         post_img_offset = N
         gray_img_offset = 2 * N
 
         # Generate raw_image_indices by permuting and padding
         images = torch.arange(N)[torch.randperm(N)]
-        to_pad = N % (2 * n_img_per_phase)
+        to_pad = N % (2 * self.n_img_per_phase)
         extra_images = images[torch.randperm(N)[:to_pad]]
-        raw_image_indices = torch.cat([images, extra_images]).reshape(-1, 2 * n_img_per_phase)
+        print(extra_images.shape)
+        print(to_pad)
+        print(images.shape)
+        raw_image_indices = torch.cat(
+                [images, extra_images]
+            ).reshape(-1, 2 * self.n_img_per_phase)
 
         # Repeat pre phase to get the post phase
         raw_image_indices = torch.cat(
-            [raw_image_indices, raw_image_indices[:, :n_img_per_phase]], 1
+            [raw_image_indices, raw_image_indices[:, :self.n_img_per_phase]], 1
         )
 
         # Generate image_indices by offsetting raw index based on phase
@@ -64,7 +77,11 @@ class MooneyDataset(Dataset):
         return len(self.image_indices)
 
     def __getitem__(self, idx: int) -> torch.Tensor:
-        return get_img_sequence(self.file_names[idx], self.image_paths)
+        return get_img_sequence(
+            self.file_names[idx],
+            self.image_paths,
+            self.n_img_per_phase
+        )
 
 
 class hook:

@@ -7,9 +7,6 @@ import torch.nn as nn
 from src._rdm_finder_helper import MooneyDataset, hook
 from src.RDM import RDM, ComputeOut
 
-image_size = 128
-n_img_per_phase = 6
-
 
 class RDMFinder:
     def __init__(
@@ -19,11 +16,33 @@ class RDMFinder:
         network_name: str,
         roi_dict: Dict[str, nn.Module],
         image_paths: Dict[int, Path],
+        image_size: int = 128,
+        n_img_per_phase: int = 6,
         reps: int = 6,
         load_cached_hiddens: bool = True,
         load_cached_rdm: bool = True,
     ) -> None:
+        """Finds an RDM given images and model.
 
+        Parameters
+        ----------
+        cache_path : Union[str, Path]
+            The directory to store cache.
+        model : nn.Module
+            The model to evaluate.
+        network_name : str
+            The name of the network.
+        roi_dict : Dict[str, nn.Module]
+            A dictionary to specify which submodule of the network to evaluate and their name.
+        image_paths : Dict[int, Path]
+            A dictionary containing image and their id. Grayscale images start from 1, and their Mooney version starts from -1.
+        reps : int
+            Number of repetitions to calculate.
+        load_cached_hiddens : bool
+            Whether to load cached hidden states.
+        load_cached_rdm : bool
+            Whether to cache RDM.
+        """
         self.cache_path = cache_path
         self.network_name = network_name
         self.model = model
@@ -34,7 +53,11 @@ class RDMFinder:
         self.roi_dict = roi_dict
 
         # Create the dataset
-        self.dataset = MooneyDataset(image_paths)
+        self.dataset = MooneyDataset(
+            image_paths,
+            image_size=image_size,
+            n_img_per_phase=n_img_per_phase
+        )
 
         # Prepare the first set of RDM hook
         self.rep_curr = 0
@@ -93,5 +116,5 @@ class RDMFinder:
         self.all_rdm_out = all_rdm_out
         return all_rdm_out
 
-    def apply_analysis(self, func: Callable[[RDM], Any]) -> Dict[str, Any]:
+    def apply_analysis(self, func: Callable[[torch.Tensor], Any]) -> Dict[str, Any]:
         return {k: func(v) for k, v in self.all_rdm_out.items()}
