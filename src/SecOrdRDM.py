@@ -41,7 +41,7 @@ class SecOrdRDM(RDM):
 
         # If we are not directly provided an rdm matrix
         if isinstance(rdm, RDM):
-            rdm = rdm.get()[0]
+            rdm = rdm.get().rdm
 
         # Register a modified name
         super().register_hiddens(sample_id=new_name, hidden=rdm)

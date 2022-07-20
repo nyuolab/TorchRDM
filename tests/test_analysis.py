@@ -35,7 +35,7 @@ class TestAnalysis:
     # TODO: Add correctness check too
     def test_intra(self, tmp_path, num_samples, hidden_shape):
         rdm = generate_rdm(num_samples, hidden_shape, "network", tmp_path)
-        out = intra_phase_mean_dissimilarity(rdm.get()[0])
+        out = intra_phase_mean_dissimilarity(rdm.get().rdm)
 
         for k, v in out.items():
             assert k in ["pre", "post", "gray"]
@@ -43,7 +43,7 @@ class TestAnalysis:
 
     def test_inter(self, tmp_path, num_samples, hidden_shape):
         rdm = generate_rdm(num_samples, hidden_shape, "network", tmp_path)
-        out = inter_phase_mean_dissimilarity(rdm.get()[0])
+        out = inter_phase_mean_dissimilarity(rdm.get().rdm)
 
         keys = ["-".join(pair) for pair in combinations(["pre", "post", "gray"], 2)]
         for k, v in out.items():
@@ -52,7 +52,7 @@ class TestAnalysis:
 
     def test_preservation_index(self, tmp_path, num_samples, hidden_shape):
         rdm = generate_rdm(num_samples, hidden_shape, "network", tmp_path)
-        preservation_index(rdm.get()[0])
+        preservation_index(rdm.get().rdm)
 
     @pytest.mark.parametrize("num_parts", [10])
     @pytest.mark.parametrize("low", [2, 4])
@@ -60,7 +60,7 @@ class TestAnalysis:
     def test_min_dim(self, tmp_path, num_samples, hidden_shape, num_parts, low, high):
         # First collect the generated rdms
         rdms = [
-            generate_rdm(num_samples, hidden_shape, f"network-{idx}", tmp_path).get()[0]
+            generate_rdm(num_samples, hidden_shape, f"network-{idx}", tmp_path).get().rdm
             for idx in range(num_parts)
         ]
 

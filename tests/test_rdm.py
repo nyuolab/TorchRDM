@@ -52,8 +52,9 @@ class TestRDM:
             rdm2.register_hiddens(sample_id=hidden_idx, hidden=hidden)
 
         # Outputs
-        out1, keys1 = rdm1.get()
-        out2, keys2 = rdm2.get()
+        out1, out2 = rdm1.get(), rdm2.get()
+        out1, keys1 = out1.rdm, out1.hidden_keys
+        out2, keys2 = out2.rdm, out2.hidden_keys
 
         assert keys1 == keys2
         for x1, x2 in zip(out1, out2):
@@ -79,7 +80,8 @@ class TestRDM:
             rdm.register_hiddens(sample_id=hidden_idx, hidden=hidden)
 
         # Compute
-        mtx, keys = rdm.get()
+        out = rdm.get()
+        mtx, keys = out.rdm, out.hidden_keys
 
         # Check the keys correct
         assert set(keys) == set(hiddens_to_use)
