@@ -35,7 +35,8 @@ class RDMFinder:
         roi_dict : Dict[str, nn.Module]
             A dictionary to specify which submodule of the network to evaluate and their name.
         image_paths : Dict[int, Path]
-            A dictionary containing image and their id. Grayscale images start from 1, and their Mooney version starts from -1.
+            A dictionary containing image and their id.
+            Grayscale images start from 1, and their Mooney version starts from -1.
         image_size : int
             The size of image to use when passing into the model.
         n_img_per_phase : int
@@ -57,9 +58,7 @@ class RDMFinder:
 
         # Create the dataset
         self.dataset = MooneyDataset(
-            image_paths,
-            image_size=image_size,
-            n_img_per_phase=n_img_per_phase
+            image_paths, image_size=image_size, n_img_per_phase=n_img_per_phase
         )
 
         # Prepare the first set of RDM hook
@@ -92,8 +91,7 @@ class RDMFinder:
 
             # Register forward hooks
             _hook = hook(rdm, self.dataset)
-            self.registered_hooks.append(_hook)
-            roi_module.register_forward_hook(_hook)
+            self.registered_hooks.append(roi_module.register_forward_hook(_hook))
 
         # Increment the counter for rep
         self.rep_curr += 1
@@ -120,4 +118,4 @@ class RDMFinder:
         return all_rdm_out
 
     def apply_analysis(self, func: Callable[[torch.Tensor], Any]) -> Dict[str, Any]:
-        return {k: func(v) for k, v in self.all_rdm_out.items()}
+        return {k: func(v.rdm) for k, v in self.all_rdm_out.items()}
