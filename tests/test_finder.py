@@ -63,7 +63,7 @@ def test_finder(tmp_path, num_img, image_size, n_img_per_phase, valid_rdm):
     )
 
     # Find sample ids
-    sample_ids = [idx for idx in range(1, 3 * num_img + 1)]
+    sample_ids = list(range(1, 3 * num_img + 1))
 
     out = finder.compute()
     for name, rdm in out.items():
