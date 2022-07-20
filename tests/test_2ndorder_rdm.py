@@ -23,7 +23,7 @@ def generate_rdm(num_hiddens, hiddens_shape, network_name, cache_path):
 
 @pytest.mark.parametrize("num_samples", [10, 20])
 @pytest.mark.parametrize("hidden_shape", [(10, 20), (20, 3)])
-def test_sec_ord(num_samples, hidden_shape, tmp_path):
+def test_sec_ord(num_samples, hidden_shape, tmp_path, valid_rdm):
     network_names = ("network_1", "network_2")
     network_rois = ["layer1", "layer2.0"]
 
@@ -48,6 +48,9 @@ def test_sec_ord(num_samples, hidden_shape, tmp_path):
         generated_hiddens[(network, roi)] = rdm.get()
 
     # Calculate the sec ord rdm
-    sec_ord_rdm.get()
+    out = sec_ord_rdm.get()
+
+    # Second ordr RDM is still RDM
+    valid_rdm(out, [f"{net}-{roi}" for net, roi in product(network_names, network_rois)])
 
     # TODO: Check correctness

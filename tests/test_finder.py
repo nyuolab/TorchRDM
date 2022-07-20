@@ -37,28 +37,38 @@ class SimpleModel(nn.Module):
 @pytest.mark.parametrize("num_img", [10, 20])
 @pytest.mark.parametrize("image_size", [21, 64])
 @pytest.mark.parametrize("n_img_per_phase", [3, 6])
-def test_finder(tmp_path, num_img, image_size, n_img_per_phase):
+def test_finder(tmp_path, num_img, image_size, n_img_per_phase, valid_rdm):
     img_dict = image_dict(num_img, tmp_path, image_size)
 
     # Create a simple model
     model = SimpleModel()
+
+    # The list of rois
+    roi_dict = {
+        "layer1": model.m1,
+        "layer2": model.m2,
+    }
+    rdm_names = list(roi_dict.keys())
 
     # Instantiate finder
     finder = RDMFinder(
         cache_path=tmp_path,
         model=model,
         network_name="network1",
-        roi_dict={
-            "layer1": model.m1,
-            "layer2": model.m2,
-        },
+        roi_dict=roi_dict,
         image_paths=img_dict,
         image_size=image_size,
         n_img_per_phase=n_img_per_phase,
         reps=6,
     )
 
-    # TODO: Refactor RDM validity test as a fixture and test correctness here too
+    # Find sample ids
+    sample_ids = [idx for idx in range(1, 3 * num_img + 1)]
 
-    finder.compute()
+    out = finder.compute()
+    for name, rdm in out.items():
+        assert name in rdm_names
+        valid_rdm(rdm, sample_ids)
+
+    # TODO: Check that we can apply analysis
     finder.apply_analysis(preservation_index)
