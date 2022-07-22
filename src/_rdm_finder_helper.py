@@ -34,7 +34,7 @@ class MooneyDataset(Dataset):
         self.image_paths = image_paths
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         N = len(self.image_paths) // 2
 
         gray_start = self.n_img_per_phase
