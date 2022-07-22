@@ -52,8 +52,9 @@ class TestRDM:
             rdm2.register_hiddens(sample_id=hidden_idx, hidden=hidden)
 
         # Outputs
-        out1, keys1 = rdm1.get()
-        out2, keys2 = rdm2.get()
+        out1, out2 = rdm1.get(), rdm2.get()
+        out1, keys1 = out1.rdm, out1.hidden_keys
+        out2, keys2 = out2.rdm, out2.hidden_keys
 
         assert keys1 == keys2
         for x1, x2 in zip(out1, out2):
@@ -62,7 +63,7 @@ class TestRDM:
     @pytest.mark.parametrize("hidden_shape", [(32, 2), (64, 9), (77, 3)])
     @pytest.mark.parametrize("num_hiddens_used", [5, 8, -1])
     def test_rdm_calculate_basic(
-        self, num_hiddens, network_name, hidden_shape, num_hiddens_used, tmp_path, close
+        self, num_hiddens, network_name, hidden_shape, num_hiddens_used, tmp_path, close, valid_rdm
     ):
         rdm = RDM(cache_path=tmp_path, network_name=network_name)
 
@@ -79,19 +80,8 @@ class TestRDM:
             rdm.register_hiddens(sample_id=hidden_idx, hidden=hidden)
 
         # Compute
-        mtx, keys = rdm.get()
-
-        # Check the keys correct
-        assert set(keys) == set(hiddens_to_use)
-
-        # Check that the computed output is symmetric
-        assert close(mtx, mtx.T)
-
-        # Check that the values are in [0,2]
-        assert not torch.logical_or(mtx > 2, mtx < 0).any()
-
-        # Check that diagonal is 0
-        assert not (torch.diagonal(mtx) != 0).any()
+        out = rdm.get()
+        valid_rdm(out, hiddens_to_use)
 
 
 # TODO: A test for matrix correctness?

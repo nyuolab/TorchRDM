@@ -1,9 +1,11 @@
-# --------- pytorch --------- #
+# --------- Computation --------- #
 -f https://download.pytorch.org/whl/torch_stable.html
 torch>=1.11.0+cu113
+torchvision>=0.12.0+cu113
+sklearn
+numpy
 
 # --------- linters --------- #
-pylama[all]     # better checker overall
 pre-commit      # hooks for applying linters on commit
 black           # code formatting
 isort           # import sorting
