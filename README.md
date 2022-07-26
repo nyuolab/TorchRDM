@@ -3,6 +3,7 @@ This package contains some basic code for you to get started with obtaining and 
 
 ## Before using
 ### Development install
+TODO: This is not complete and may screw with torch version. Maybe use poetry to package and manage dev usage?
 Please install the requirements by running `pip install -r requirements.txt`.
 
 ## Basic usage
