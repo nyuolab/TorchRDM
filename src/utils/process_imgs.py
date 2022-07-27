@@ -5,18 +5,16 @@ from pathlib import Path
 import scipy.io as sio
 
 
-def process_images(source_path: Path = Path("./"), store_path: Path = Path("./")):
+def process_images(source_path: Path = Path("./")):
     """Preprocess the image data for later use.
 
     Parameters
     ----------
     source_path : Path
         The source path of data.
-    store_path : Path
-        Where to store the preprocessed data.
     """
     # First create a directory for mooney images and grayscale images
-    img_path = store_path / "imgs/"
+    img_path = source_path / "processed_imgs/"
     img_path.mkdir(parents=True, exist_ok=True)
 
     # Read the rdm label
