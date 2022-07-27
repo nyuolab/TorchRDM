@@ -1,3 +1,9 @@
+# Mac temp files
+.DS_Store
+
+# Project temp files
+He_lab_Mooney_data
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
