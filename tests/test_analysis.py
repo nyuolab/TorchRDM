@@ -2,7 +2,6 @@ from itertools import combinations
 
 import pytest
 import torch
-
 from src.TorchRDM.analysis import (
     inter_phase_mean_dissimilarity,
     intra_phase_mean_dissimilarity,

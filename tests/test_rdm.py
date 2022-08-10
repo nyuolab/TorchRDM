@@ -2,7 +2,6 @@ import random
 
 import pytest
 import torch
-
 from src.TorchRDM.RDM import RDM
 
 

@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any, Union
 
 
-
 class Cacheable:
     def __init__(
         self,

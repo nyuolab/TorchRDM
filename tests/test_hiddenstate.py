@@ -1,6 +1,5 @@
 import pytest
 import torch
-
 from src.TorchRDM.HiddenState import HiddenState
 
 
