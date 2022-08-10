@@ -1,6 +1,6 @@
 import pytest
 import torch
-from src.TorchRDM.HiddenState import HiddenState
+from src.torchrdm.HiddenState import HiddenState
 
 
 @pytest.mark.parametrize(

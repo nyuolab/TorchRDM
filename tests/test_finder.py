@@ -6,8 +6,8 @@ import numpy as np
 import pytest
 import torch.nn as nn
 from PIL import Image
-from src.TorchRDM.analysis import preservation_index
-from src.TorchRDM.RDMFinder import RDMFinder
+from src.torchrdm.analysis import preservation_index
+from src.torchrdm.RDMFinder import RDMFinder
 
 
 def image_dict(n_img, cache_path, image_size):

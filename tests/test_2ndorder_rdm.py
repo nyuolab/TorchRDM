@@ -2,8 +2,8 @@ from itertools import product
 
 import pytest
 import torch
-from src.TorchRDM.RDM import RDM
-from src.TorchRDM.SecOrdRDM import SecOrdRDM
+from src.torchrdm.RDM import RDM
+from src.torchrdm.SecOrdRDM import SecOrdRDM
 
 
 def generate_rdm(num_hiddens, hiddens_shape, network_name, cache_path):

@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Union
 
 import torch
-from src.Cacheable import Cacheable
+from src.torchrdm.Cacheable import Cacheable
 
 
 class HiddenState(Cacheable):
