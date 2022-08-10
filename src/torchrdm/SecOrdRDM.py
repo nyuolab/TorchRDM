@@ -2,7 +2,8 @@ from pathlib import Path
 from typing import Callable, Optional, Tuple, Union
 
 import torch
-from src.torchrdm.RDM import RDM
+
+from .RDM import RDM
 
 
 class SecOrdRDM(RDM):

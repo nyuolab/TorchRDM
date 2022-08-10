@@ -3,8 +3,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 from sklearn.manifold import trustworthiness
-from src.torchrdm.utils import dim_reduce
-from src.torchrdm.utils import get_phase_sub_rdm as gpsr
+
+from .utils import dim_reduce
+from .utils import get_phase_sub_rdm as gpsr
 
 
 def intra_phase_mean_dissimilarity(rdm: torch.Tensor) -> Dict[str, torch.Tensor]:

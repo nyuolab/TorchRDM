@@ -2,6 +2,7 @@ from itertools import product
 
 import pytest
 import torch
+
 from src.torchrdm.RDM import RDM
 from src.torchrdm.SecOrdRDM import SecOrdRDM
 

@@ -3,8 +3,9 @@ from typing import Any, Callable, Dict, Union
 
 import torch
 import torch.nn as nn
-from src.torchrdm._rdm_finder_helper import MooneyDataset, hook
-from src.torchrdm.RDM import RDM, ComputeOut
+
+from ._rdm_finder_helper import MooneyDataset, hook
+from .RDM import RDM, ComputeOut
 
 
 class RDMFinder:

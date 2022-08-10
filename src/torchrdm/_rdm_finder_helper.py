@@ -6,9 +6,10 @@ from typing import Dict
 
 import torch
 from PIL import Image
-from src.torchrdm.RDM import RDM
 from torch.utils.data import Dataset
 from torchvision import transforms
+
+from .RDM import RDM
 
 
 def get_img_sequence(
