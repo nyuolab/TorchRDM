@@ -3,7 +3,7 @@ from typing import Union
 
 import torch
 
-from src.torchrdm.Cacheable import Cacheable
+from .Cacheable import Cacheable
 
 
 class HiddenState(Cacheable):

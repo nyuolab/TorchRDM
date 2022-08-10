@@ -9,7 +9,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from src.torchrdm.RDM import RDM
+from .RDM import RDM
 
 
 def get_img_sequence(
