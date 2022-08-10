@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 from typing import Union
 
@@ -6,7 +5,6 @@ import torch
 
 from src.Cacheable import Cacheable
 
-logging.getLogger(__name__)
 
 
 class HiddenState(Cacheable):
@@ -47,7 +45,6 @@ class HiddenState(Cacheable):
         if load_cached_hidden and self.is_cached(cache_path, network_name, sample_id):
             hidden = None
         super().__init__(cache_path=cache_path, item_name=str(self), item=hidden)
-        logging.debug(f"Initialized {str(self)}.")
 
     @staticmethod
     def _preprocess(data: torch.Tensor) -> torch.Tensor:
@@ -116,7 +113,6 @@ class HiddenState(Cacheable):
         torch.Tensor
             The loaded 'hidden' property associated with this hiddens object.
         """
-        logging.debug(f"Loading hidden state of {str(self)}.")
         return super().item
 
     @hidden.setter
@@ -128,7 +124,6 @@ class HiddenState(Cacheable):
         new_hidden : torch.Tensor
             The new hidden state to associate with this hiddens object.
         """
-        logging.debug(f"Updating hidden state of {str(self)}.")
         new_hidden = self._preprocess(new_hidden)
         super().item = new_hidden
 

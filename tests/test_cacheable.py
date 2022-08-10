@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import torch
 
-from src.Cacheable import Cacheable
+from src.TorchRDM.Cacheable import Cacheable
 
 
 class TestInitialize:

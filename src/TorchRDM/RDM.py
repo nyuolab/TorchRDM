@@ -1,7 +1,6 @@
-import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Union
 
 import torch
 
@@ -14,9 +13,6 @@ from src.utils import spearmanr
 class ComputeOut:
     rdm: torch.Tensor
     hidden_keys: List[Union[int, str]]
-
-
-logging.getLogger(__name__)
 
 
 class RDM(Cacheable):
@@ -67,7 +63,6 @@ class RDM(Cacheable):
             item_name=self._format_name(network_name),
             item=to_init,
         )
-        logging.debug(f"Initialized {str(self)}.")
 
     @staticmethod
     def is_cached(
@@ -146,11 +141,9 @@ class RDM(Cacheable):
         # Check if we updated the hiddens
         hiddens_keys = self._get_hidden_keys()
         if self.item[0] != hiddens_keys:
-            logging.debug("Updating existing RDM...")
             out = self._caclulate(device)
             self.item = [hiddens_keys, out]
         else:
-            logging.debug("Loading existing RDM...")
             out = self.item[1]
 
         return ComputeOut(out, hiddens_keys)

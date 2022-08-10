@@ -3,7 +3,7 @@ import random
 import pytest
 import torch
 
-from src.RDM import RDM
+from src.TorchRDM.RDM import RDM
 
 
 @pytest.mark.parametrize("network_name", [f"network{i}" for i in range(2)])
