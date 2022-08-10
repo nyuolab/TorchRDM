@@ -2,14 +2,13 @@ from itertools import combinations
 
 import pytest
 import torch
-
-from src.analysis import (
+from src.torchrdm.analysis import (
     inter_phase_mean_dissimilarity,
     intra_phase_mean_dissimilarity,
     minimum_dimension,
     preservation_index,
 )
-from src.RDM import RDM
+from src.torchrdm.RDM import RDM
 
 
 def generate_rdm(num_hiddens, hiddens_shape, network_name, cache_path):

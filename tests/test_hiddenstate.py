@@ -1,7 +1,6 @@
 import pytest
 import torch
-
-from src.HiddenState import HiddenState
+from src.torchrdm.HiddenState import HiddenState
 
 
 @pytest.mark.parametrize(
@@ -39,9 +38,7 @@ class TestData:
 
         # There shouldn't be a cache now
         assert not HiddenState.is_cached(
-            cache_path=tmp_path,
-            network_name=network_name,
-            sample_id=hidden_id
+            cache_path=tmp_path, network_name=network_name, sample_id=hidden_id
         )
 
         # Initialize hidden object
@@ -53,9 +50,7 @@ class TestData:
         )
 
         assert HiddenState.is_cached(
-            cache_path=tmp_path,
-            network_name=network_name,
-            sample_id=hidden_id
+            cache_path=tmp_path, network_name=network_name, sample_id=hidden_id
         )
 
         # Use a different input
@@ -75,11 +70,8 @@ class TestData:
 
         # We shouldn't have a cache now
         assert not HiddenState.is_cached(
-            cache_path=tmp_path,
-            network_name=network_name,
-            sample_id=hidden_id
+            cache_path=tmp_path, network_name=network_name, sample_id=hidden_id
         )
-
 
         # Initialize hidden object
         HiddenState(
@@ -91,9 +83,7 @@ class TestData:
 
         # There should be a cache here
         assert HiddenState.is_cached(
-            cache_path=tmp_path,
-            network_name=network_name,
-            sample_id=hidden_id
+            cache_path=tmp_path, network_name=network_name, sample_id=hidden_id
         )
 
         # Use a different input
@@ -103,7 +93,7 @@ class TestData:
             network_name=network_name,
             sample_id=hidden_id,
             hidden=hidden,
-            load_cached_hidden=False
+            load_cached_hidden=False,
         )
 
         # The output should be the same

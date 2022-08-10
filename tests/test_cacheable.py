@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
 import torch
-
-from src.Cacheable import Cacheable
+from src.torchrdm.Cacheable import Cacheable
 
 
 class TestInitialize:
