@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "TorchRDM"
+name = "torchrdm"
 version = "0.0.1"
 authors = [
   { name="Xujin Chris Liu", email="xl3942@nyu.edu" },
