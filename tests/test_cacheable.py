@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import torch
+
 from src.torchrdm.Cacheable import Cacheable
 
 

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Union
 
 import torch
+
 from src.torchrdm.Cacheable import Cacheable
 from src.torchrdm.HiddenState import HiddenState
 from src.torchrdm.utils import spearmanr
