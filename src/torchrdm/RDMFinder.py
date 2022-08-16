@@ -1,5 +1,7 @@
+import shutil
+import tempfile
 from pathlib import Path
-from typing import Any, Callable, Dict, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -11,11 +13,11 @@ from .RDM import RDM, ComputeOut
 class RDMFinder:
     def __init__(
         self,
-        cache_path: Union[str, Path],
         model: nn.Module,
         network_name: str,
         roi_dict: Dict[str, nn.Module],
         image_paths: Dict[int, Path],
+        cache_path: Optional[Union[str, Path]] = None,
         image_size: int = 128,
         n_img_per_phase: int = 6,
         reps: int = 6,
@@ -26,8 +28,6 @@ class RDMFinder:
 
         Parameters
         ----------
-        cache_path : Union[str, Path]
-            The directory to store cache.
         model : nn.Module
             The model to evaluate.
         network_name : str
@@ -37,6 +37,9 @@ class RDMFinder:
         image_paths : Dict[int, Path]
             A dictionary containing image and their id.
             Grayscale images start from 1, and their Mooney version starts from -1.
+        cache_path : Optional[Union[str, Path]]
+            The directory to store cache. Defaults to None, in which case we will
+            use a temp directory.
         image_size : int
             The size of image to use when passing into the model.
         n_img_per_phase : int
@@ -98,9 +101,13 @@ class RDMFinder:
         return out
 
     def compute(self, device: Union[str, torch.device] = "cpu") -> Dict[str, ComputeOut]:
+        use_temp_dir = self.cache_path is None
         all_rdm_out = {}
 
         for _ in range(self.reps):
+            if use_temp_dir:
+                self.cache_path = tempfile.mkdtemp()
+
             # Create a new set of reps
             rdm_dict = self._prepare_hooks()
 
@@ -114,7 +121,11 @@ class RDMFinder:
             rdm_out_dict = {k: v.get(device) for k, v in rdm_dict.items()}
             all_rdm_out |= rdm_out_dict
 
+            if use_temp_dir:
+                shutil.rmtree(self.cache_path)
+
         self.all_rdm_out = all_rdm_out
+        self.cache_path = None
         return all_rdm_out
 
     def apply_analysis(self, func: Callable[[torch.Tensor], Any]) -> Dict[str, Any]:
