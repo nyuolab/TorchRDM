@@ -35,10 +35,11 @@ class SimpleModel(nn.Module):
         return self.m2(self.m1(x))
 
 
+@pytest.mark.parametrize("use_cache", [True, False])
 @pytest.mark.parametrize("num_img", [10, 20])
 @pytest.mark.parametrize("image_size", [21, 64])
 @pytest.mark.parametrize("n_img_per_phase", [3, 6])
-def test_finder(tmp_path, num_img, image_size, n_img_per_phase, valid_rdm):
+def test_finder(use_cache, tmp_path, num_img, image_size, n_img_per_phase, valid_rdm):
     img_dict = image_dict(num_img, tmp_path, image_size)
     reps = 6
 
@@ -54,7 +55,7 @@ def test_finder(tmp_path, num_img, image_size, n_img_per_phase, valid_rdm):
 
     # Instantiate finder
     finder = RDMFinder(
-        cache_path=tmp_path,
+        cache_path=tmp_path if use_cache else None,
         model=model,
         network_name="network1",
         roi_dict=roi_dict,
